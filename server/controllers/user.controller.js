@@ -1,4 +1,4 @@
-const User = require("../routes/user.route");
+const User = require("../models/user.model");
 const axios = require("axios");
 
 //Function to add mutual firends in the friends array
@@ -32,13 +32,17 @@ exports.getUser = async (req, res) => {
   try {
     //Check if the user is present in the database
     const { username } = req.params;
+    console.log(username);
     const user = await User.findOne({ login: username });
+    console.log(user);
+
 
     //if user dont exist add it from the github api
     if (!user) {
       const response = await axios.get(
         `https://api.github.com/users/${username}`
       );
+      console.log(response);
       const data = response.data;
       const newUser = await User.create({ ...data });
 
@@ -49,14 +53,14 @@ exports.getUser = async (req, res) => {
     }
     return res.status(200).send({ user });
   } catch (error) {
-    return res.status(500).send({ error: "Internal Server Error" });
+    return res.status(500).send(error);
   }
 };
 
 //Function to filter data according to the query
 exports.searchUsers = async (req, res) => {
   try {
-    const { username, location, company, hireable, public_repos } = req.query;
+    const { username, location, company, public_repos } = req.query;
     const query = {
       deleted: { $ne: true },
     };
@@ -111,7 +115,7 @@ exports.updateUserFields = async (req, res) => {
 
     // Find the user by username
     const user = await User.findOne({ login: username });
-
+      // if user exist but softdeleted = true then user not found
     // If user not found, return not found response
     if (!user) {
       return res.status(404).send({ error: "User not found" });
