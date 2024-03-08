@@ -117,7 +117,7 @@ exports.updateUserFields = async (req, res) => {
     const user = await User.findOne({ login: username });
       // if user exist but softdeleted = true then user not found
     // If user not found, return not found response
-    if (!user) {
+    if (!user || (user.deleted == true)) {
       return res.status(404).send({ error: "User not found" });
     }
 
