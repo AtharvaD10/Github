@@ -1,85 +1,103 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
 const Login = () => {
   const [username, setUsername] = useState('');
   const [repositories, setRepositories] = useState([]);
-  const [userInfo, setUserInfo] = useState({});
+  const [userInfo, setUserInfo] = useState(null);
   const [followers, setFollowers] = useState([]);
-    console.log(username);
-    const fetchUserInfoAndRepositories = async () => {
-    try {
-      console.log(username);
-      const userResponse = await fetch(`http://localhost:3001//users/${username}`); 
-      //https://api.github.com/users/mralexgray
-      const userData = await userResponse.json();
-      setUserInfo(userData);
-      console.log(setUserInfo);
+  const [selectedRepo, setSelectedRepo] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-      const reposResponse = await fetch(userData.repos_url);
-      const reposData = await reposResponse.json();
-      setRepositories(reposData);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (username) {
+        try {
+          const userResponse = await axios.get(`https://api.github.com/users/${username}`);
+          setUserInfo(userResponse.data);
 
-      const followersResponse = await fetch(userData.followers_url);
-      const followersData = await followersResponse.json();
-      setFollowers(followersData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
+          const reposResponse = await axios.get(`https://api.github.com/users/${username}/repos`);
+          setRepositories(reposResponse.data);
+
+          const followersResponse = await axios.get(`https://api.github.com/users/${username}/followers`);
+          setFollowers(followersResponse.data);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+    };
+
+    fetchData();
+  }, [username]);
+
+  const handleRepoClick = (repo) => {
+    setSelectedRepo(repo);
+    setModalVisible(true);
   };
 
-  const handleInputChange = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const handleRepositoryClick = (repoName) => {
-    // Redirect to repository description page
-    console.log(`Clicked on repository: ${repoName}`);
-  };
-
-  const handleFollowerClick = (followerUsername) => {
-    // Redirect to repository list page of the follower
-    console.log(`Clicked on follower: ${followerUsername}`);
+  const handleCloseModal = () => {
+    setModalVisible(false);
   };
 
   return (
-    <div className=''>
-      <h1 className='text-center py-7 bg-black text-white'>GitHub Repository Viewer</h1>
-      <input className='p-4 m-4 col-span-9 rounded-lg items-center'
-        type="text"
-        value={username}
-        onChange={handleInputChange }
-        placeholder="Enter GitHub Username"
-      />
-      <button className='col-span-3 py-2  px-4 bg-red-700 text-white rounded-lg hover:bg-opacity-10' 
-        onClick={fetchUserInfoAndRepositories}>Search</button>
-
-      <div className='text-center text-lg my-1'>
-        <h2 className='bg-black text-white'>User Info</h2>
-        <p >Username: {userInfo.login}</p>
-        <p>Name: {userInfo.name}</p>
-        <p>Public Repos: {userInfo.public_repos}</p>
+    <div className="max-w-2xl mx-auto mt-8">
+      <div className="flex items-center justify-center">
+        <input
+          type="text"
+          className="border border-gray-300 rounded px-4 py-2 mr-2 w-64"
+          placeholder="Enter GitHub username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={() => setUsername(username)}
+        >
+          Search
+        </button>
       </div>
 
-      <div className=' my-5 text-center text-xl text-red-950'>
-        <h2 className='bg-black text-white'>Repositories</h2>
-        <ul>
-          {repositories.map(repo => (
-            <li key={repo.id} onClick={() => handleRepositoryClick(repo.name)}>
-              {repo.name}
-            </li>
-          ))}
-        </ul>
+      {userInfo && (
+        <div className="mt-4">
+          <h2 className="text-lg font-bold">{userInfo.login}</h2>
+          <p>Followers: {userInfo.followers}</p>
+          <p>Following: {userInfo.following}</p>
+        </div>
+      )}
+
+      <div className="mt-8 grid grid-cols-2 gap-4">
+        {repositories.map(repo => (
+          <div key={repo.id} className="border border-gray-300 p-4 cursor-pointer hover:bg-gray-100" onClick={() => handleRepoClick(repo)}>
+            <h3 className="font-bold">{repo.name}</h3>
+            <p>{repo.description}</p>
+          </div>
+        ))}
       </div>
 
-      <div className='my-5 text-center text-xl'>
-        <h2 className='bg-black text-white'>Followers</h2>
-        <ul>
-          {followers.map(follower => (
-            <li key={follower.id} onClick={() => handleFollowerClick(follower.login)}>
-              {follower.login}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {followers.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-bold">Followers</h3>
+          <ul>
+            {followers.map(follower => (
+              <li key={follower.id} className="cursor-pointer hover:text-blue-500">
+                {follower.login}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {selectedRepo && (
+        <div className={`fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 ${modalVisible ? '' : 'hidden'}`}>
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-lg font-bold">{selectedRepo.name}</h2>
+            <p>{selectedRepo.description}</p>
+            <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={handleCloseModal}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

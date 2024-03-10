@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema(
     public_gists: Number,
     followers: Number,
     following: Number,
+    followers_url: String,
+    following_url: String,
     friends: [String],
     deleted: {
       type: Boolean,

@@ -37,7 +37,7 @@ exports.getUser = async (req, res) => {
     console.log(user);
 
     //cheking if user is softDeleted or not
-    if(user.deleted === true){
+    if(user && user.deleted === true){
       return res.status(404).send({ error: "User is  deleted" });
     }
 
@@ -46,13 +46,14 @@ exports.getUser = async (req, res) => {
       const response = await axios.get(
         `https://api.github.com/users/${username}`
       );
-      console.log(response);
+      
       const data = response.data;
+      
       const newUser = await User.create({ ...data });
 
       //Saving the mutual friends data
       await saveMutualFriends(newUser);
-
+      console.log(newUser);
       return res.status(200).send({ newUser });
     }
     return res.status(200).send({ user });
