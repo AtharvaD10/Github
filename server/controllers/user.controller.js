@@ -36,6 +36,10 @@ exports.getUser = async (req, res) => {
     const user = await User.findOne({ login: username });
     console.log(user);
 
+    //cheking if user is softDeleted or not
+    if(user.deleted === true){
+      return res.status(404).send({ error: "User is  deleted" });
+    }
 
     //if user dont exist add it from the github api
     if (!user) {
@@ -61,6 +65,8 @@ exports.getUser = async (req, res) => {
 exports.searchUsers = async (req, res) => {
   try {
     const { username, location, company, public_repos } = req.query;
+    console.log(username)
+    console.log(location)
     const query = {
       deleted: { $ne: true },
     };
@@ -70,6 +76,7 @@ exports.searchUsers = async (req, res) => {
     if (location) {
       query.location = location;
     }
+  
     if (company) {
       query.company = company;
     }
@@ -163,8 +170,10 @@ exports.getAllUsersSorted = async (req, res) => {
 
     // Query the database to get all users and sort by the specified field
     const users = await User.find().sort({ [sortBy]: -1 });
+    
+    const filterdUser = users.filter(user =>user.deleted === false) 
 
-    return res.status(200).send({ users });
+    return res.status(200).send({ filterdUser });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).send({ error: "Internal Server Error" });

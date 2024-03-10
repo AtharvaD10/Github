@@ -4,10 +4,12 @@ const Login = () => {
   const [repositories, setRepositories] = useState([]);
   const [userInfo, setUserInfo] = useState({});
   const [followers, setFollowers] = useState([]);
-
-  const fetchUserInfoAndRepositories = async () => {
+    console.log(username);
+    const fetchUserInfoAndRepositories = async () => {
     try {
-      const userResponse = await fetch(`http://localhost:3001/users/${username}`);
+      console.log(username);
+      const userResponse = await fetch(`http://localhost:3001//users/${username}`); 
+      //https://api.github.com/users/mralexgray
       const userData = await userResponse.json();
       setUserInfo(userData);
       console.log(setUserInfo);
@@ -22,6 +24,10 @@ const Login = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
+  };
+
+  const handleInputChange = (e) => {
+    setUsername(e.target.value);
   };
 
   const handleRepositoryClick = (repoName) => {
@@ -40,7 +46,7 @@ const Login = () => {
       <input className='p-4 m-4 col-span-9 rounded-lg items-center'
         type="text"
         value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={handleInputChange }
         placeholder="Enter GitHub Username"
       />
       <button className='col-span-3 py-2  px-4 bg-red-700 text-white rounded-lg hover:bg-opacity-10' 
